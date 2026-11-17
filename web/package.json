@@ -1,7 +1,7 @@
 {
   "name": "bill-rewards",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "信用卡账单返利看板（纯前端，Cloudflare Workers 静态资源）",
   "scripts": {
     "build": "node scripts/build.mjs",

@@ -8,7 +8,7 @@
 
 ## 安装脚本
 
-打开 <https://bill.pi-app.kdns.fr/hsbc_bill_export.user.js>，Tampermonkey 会弹出安装页。
+打开 <https://hsbc-rewards.pi-app.kdns.fr/hsbc_bill_export.user.js>，Tampermonkey 会弹出安装页。
 
 ## 发版（网站与脚本分开管理）
 

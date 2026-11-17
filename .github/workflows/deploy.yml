@@ -78,7 +78,7 @@ jobs:
           WANT: '{"web":"${{ steps.v.outputs.web }}","script":"${{ steps.v.outputs.script }}"}'
         run: |
           for i in 1 2 3 4 5 6; do
-            got=$(curl -fsS "https://bill.pi-app.kdns.fr/version.json?t=$(date +%s)" | node -p 'const v=JSON.parse(require("fs").readFileSync(0));JSON.stringify({web:v.web,script:v.script})') || true
+            got=$(curl -fsS "https://hsbc-rewards.pi-app.kdns.fr/version.json?t=$(date +%s)" | node -p 'const v=JSON.parse(require("fs").readFileSync(0));JSON.stringify({web:v.web,script:v.script})') || true
             echo "线上 $got，期望 $WANT"
             [ "$got" = "$WANT" ] && exit 0
             sleep 10

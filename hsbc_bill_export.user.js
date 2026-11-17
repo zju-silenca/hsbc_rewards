@@ -1,19 +1,19 @@
 // ==UserScript==
 // @name         HSBC 信用卡账单导出 + Pulse 返利计算
 // @namespace    hsbc-bill-export
-// @version      4.2.1
+// @version      4.2.2
 // @description  在汇丰网银页面捕获/拉取信用卡交易记录，累计保存并在在线看板查看，一键导出 Excel（全公式：基础奖赏0.4%、Pulse特别奖赏2%、赏世界2%、内地餐饮3%、迎新礼、按入账日对账）
 // @match        https://www.hsbc.com.hk/*
 // @run-at       document-start
-// @match        https://bill.pi-app.kdns.fr/*
+// @match        https://hsbc-rewards.pi-app.kdns.fr/*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_deleteValue
 // @grant        GM_addValueChangeListener
 // @grant        unsafeWindow
 // @require      https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
-// @downloadURL  https://bill.pi-app.kdns.fr/hsbc_bill_export.user.js
-// @updateURL    https://bill.pi-app.kdns.fr/hsbc_bill_export.user.js
+// @downloadURL  https://hsbc-rewards.pi-app.kdns.fr/hsbc_bill_export.user.js
+// @updateURL    https://hsbc-rewards.pi-app.kdns.fr/hsbc_bill_export.user.js
 // ==/UserScript==
 
 /* eslint-disable no-console */
@@ -92,8 +92,8 @@
 
     // 在线看板：脚本同时运行在看板页面，从油猴存储读取账单交给页面（不经过网址和服务器）
     // 改地址时同步修改顶部的 @match
-    VIEWER_URL: 'https://bill.pi-app.kdns.fr/',
-    VIEWER_ORIGINS: ['https://bill.pi-app.kdns.fr', 'http://localhost:8787'],
+    VIEWER_URL: 'https://hsbc-rewards.pi-app.kdns.fr/',
+    VIEWER_ORIGINS: ['https://hsbc-rewards.pi-app.kdns.fr', 'http://localhost:8787'],
   };
 
   // ============================================================
