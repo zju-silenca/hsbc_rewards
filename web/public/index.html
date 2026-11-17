@@ -17,10 +17,6 @@
         <p class="sub" id="range">数据只在本机浏览器处理，不上传</p>
       </div>
     </div>
-    <nav class="nav" aria-label="页面">
-      <a href="./" aria-current="page">返利看板</a>
-      <a href="offers">优惠信息</a>
-    </nav>
     <div class="actions">
       <select class="btn card-sel" id="card-sel" aria-label="选择信用卡" hidden></select>
       <button class="btn" id="btn-params" type="button" disabled>⚙ 参数</button>
@@ -138,10 +134,16 @@
     </div>
   </dialog>
 
+  <nav class="pagenav" id="pagenav" aria-label="页面">
+    <a href="./" aria-current="page">返利看板</a>
+    <a href="offers">优惠信息</a>
+  </nav>
+
   <div class="tip" id="tip" role="tooltip" hidden></div>
 
   <script src="core.js" data-bill-core></script>
   <script src="vendor/exceljs.min.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="nav.js" defer></script>
 </body>
 </html>

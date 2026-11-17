@@ -24,7 +24,7 @@ jobs:
       startsWith(github.event.release.tag_name, 'script-v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0  # 需要全部标签
 
@@ -54,7 +54,7 @@ jobs:
           echo "script=$scriptver" >> "$GITHUB_OUTPUT"
           echo "### 部署：网站 $webver（$web）· 油猴脚本 $scriptver（$script）" >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -65,8 +65,10 @@ jobs:
 
       - name: Deploy
         working-directory: web
-        run: npm run deploy
+        # versions upload + deploy：不改动自定义域名，Token 只需 Workers Editor
+        run: npm run deploy:ci
         env:
+          DEPLOY_MESSAGE: ${{ github.event.release.tag_name || 'manual' }} (web ${{ steps.v.outputs.web }} / script ${{ steps.v.outputs.script }})
           SCRIPT_SRC: ${{ runner.temp }}/dist.user.js
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
