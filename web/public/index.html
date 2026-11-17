@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>账单返利看板</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='16' width='6' height='13' rx='2' fill='%232a78d6'/%3E%3Crect x='13' y='9' width='6' height='20' rx='2' fill='%23eb6834'/%3E%3Crect x='23' y='3' width='6' height='26' rx='2' fill='%231baf7a'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div>
+        <h1>账单返利看板</h1>
+        <p class="sub" id="range">数据只在本机浏览器处理，不上传</p>
+      </div>
+    </div>
+    <div class="actions">
+      <select class="btn card-sel" id="card-sel" aria-label="选择信用卡" hidden></select>
+      <button class="btn" id="btn-params" type="button" disabled>⚙ 参数</button>
+      <button class="btn" id="btn-import" type="button">导入文件</button>
+      <button class="btn primary" id="btn-export" type="button" disabled>导出 Excel</button>
+      <button class="btn ghost" id="btn-clear" type="button" disabled>清除数据</button>
+      <button class="btn ghost icon" id="btn-theme" type="button" title="切换深色/浅色" aria-label="切换深色/浅色">◐</button>
+      <input type="file" id="file" accept=".har,.json,application/json" hidden>
+    </div>
+  </header>
+
+  <main id="app">
+    <section id="empty" class="empty">
+      <div class="drop" id="drop">
+        <h2>还没有账单数据</h2>
+        <ol>
+          <li><a class="install" href="hsbc_bill_export.user.js">安装 / 更新油猴脚本</a>（需先装好 Tampermonkey 扩展；脚本同时运行在汇丰网银和本网站）</li>
+          <li>在汇丰网银打开信用卡交易记录，右下角面板点 <b>拉取全部</b>，账单会累计保存在油猴里</li>
+          <li>点 <b>在线查看</b> 或直接打开本网站，脚本会把账单交给这个页面</li>
+        </ol>
+        <p class="muted">也可以把浏览器保存的 <code>.har</code> 文件拖到这里，或点右上角「导入文件」。</p>
+        <p class="muted small">账单不经过网址，也不会上传：页面禁止了一切网络请求，所有计算都在本机浏览器里完成。</p>
+      </div>
+    </section>
+
+    <section id="dash" hidden>
+      <div class="kpis" id="kpis"></div>
+
+      <div class="grid two">
+        <article class="card">
+          <header class="card-h">
+            <h3>返利构成</h3>
+            <button type="button" class="switch" id="btn-pending" role="switch" aria-checked="true">
+              <span class="knob" aria-hidden="true"></span>显示审核中奖赏
+            </button>
+          </header>
+          <div class="donut-wrap">
+            <div class="donut" id="donut"></div>
+            <div class="comp-list" id="comp"></div>
+          </div>
+        </article>
+        <article class="card">
+          <header class="card-h"><h3>额度与进度</h3><span class="muted small">左：已用额度 / 总额度　右：RC / RC 上限</span></header>
+          <div id="progress" class="progress-list"></div>
+        </article>
+      </div>
+
+      <article class="card">
+        <header class="card-h">
+          <h3>每日消费</h3>
+          <div class="seg" id="daily-mode" role="tablist">
+            <button type="button" data-v="txn" class="on">按交易日</button>
+            <button type="button" data-v="post">按入账日</button>
+          </div>
+        </header>
+        <div class="legend" id="daily-legend"></div>
+        <div class="chart" id="daily"></div>
+      </article>
+
+      <article class="card">
+        <header class="card-h"><h3>内地餐饮 · 每月</h3><span class="muted small">当月内地消费满门槛，当月餐饮额外返利（审核后到账）</span></header>
+        <div id="months"></div>
+      </article>
+
+      <article class="card">
+        <header class="card-h"><h3>消费类型</h3><span class="muted small">按 MCC，扣除退款</span></header>
+        <div id="cats" class="hbars"></div>
+      </article>
+
+      <article class="card">
+        <nav class="tabs" role="tablist" id="tabs">
+          <button type="button" data-tab="tx" class="on">交易明细</button>
+          <button type="button" data-tab="rc">按入账日对账</button>
+        </nav>
+
+        <div data-pane="tx">
+          <div class="filters">
+            <input type="search" id="f-q" placeholder="搜索商户 / 描述 / 授权码 / MCC">
+            <div class="seg" id="f-ch">
+              <button type="button" data-v="" class="on">全部</button>
+              <button type="button" data-v="QR">QR</button>
+              <button type="button" data-v="APPLEPAY">Apple Pay</button>
+              <button type="button" data-v="SALES">SALES</button>
+              <button type="button" data-v="RETURN">退款</button>
+            </div>
+            <select id="f-month" aria-label="月份"></select>
+            <label class="chk"><input type="checkbox" id="f-dining"> 只看餐饮</label>
+            <label class="chk"><input type="checkbox" id="f-noelig"> 只看不计返利</label>
+            <button type="button" class="btn ghost small" id="btn-reset-ovr">重置手动修改</button>
+          </div>
+          <p class="muted small hint">点「计返利」「餐饮」两列可以切换，所有数字会立即重算；修改保存在本机浏览器。</p>
+          <div class="table-wrap"><table class="tbl" id="tbl-tx"></table></div>
+        </div>
+
+        <div data-pane="rc" hidden>
+          <p class="muted small hint">消费在入账日计返利，退款在退款入账日扣回。内地餐饮与迎新礼达标后审核统一到账，不计入当日。「实际到账」可直接填写，保存在本机浏览器。</p>
+          <div class="table-wrap"><table class="tbl" id="tbl-rc"></table></div>
+        </div>
+      </article>
+
+      <p class="foot muted small">按条款估算，实际以银行入账为准。 · <a href="hsbc_bill_export.user.js">安装 / 更新油猴脚本</a></p>
+    </section>
+  </main>
+
+  <dialog id="dlg-params" aria-labelledby="dlg-title">
+    <div class="dlg-h">
+      <h2 id="dlg-title">参数</h2>
+      <button type="button" class="btn ghost icon" id="dlg-close" aria-label="关闭">✕</button>
+    </div>
+    <p class="muted small">修改后立即重算，保存在本机浏览器。带 * 的是改过的。</p>
+    <form id="params" class="params" method="dialog"></form>
+    <div class="dlg-f">
+      <button type="button" class="btn ghost small" id="btn-reset-params">恢复默认参数</button>
+      <button type="button" class="btn primary" id="dlg-done">完成</button>
+    </div>
+  </dialog>
+
+  <div class="tip" id="tip" role="tooltip" hidden></div>
+
+  <script src="core.js" data-bill-core></script>
+  <script src="vendor/exceljs.min.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

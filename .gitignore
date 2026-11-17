@@ -1,0 +1,15 @@
+# 账单数据（含个人交易记录），绝不提交
+*.xlsx
+*.xls
+*.har
+*.csv
+.~lock.*
+
+# 依赖与本地状态
+node_modules/
+.wrangler/
+
+# 由 web/scripts/sync.mjs 生成（部署前自动复制）
+web/public/core.js
+web/public/hsbc_bill_export.user.js
+web/public/vendor/

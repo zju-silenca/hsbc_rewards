@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "bill-rewards",
+  "compatibility_date": "2026-10-01",
+  // 纯静态资源，没有 Worker 脚本：账单数据只在浏览器里处理
+  "assets": {
+    "directory": "./public"
+  },
+  // 自定义域名（workers.dev 在内地被阻断）
+  "routes": [{ "pattern": "bill.pi-app.kdns.fr", "custom_domain": true }],
+  "workers_dev": true,
+  "observability": { "enabled": false }
+}
