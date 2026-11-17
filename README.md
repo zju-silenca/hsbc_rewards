@@ -34,3 +34,5 @@ npm run deploy   # 先 sync（复制脚本与 ExcelJS 到 public/），再 wrang
 ```
 
 账单数据（`.har`、`.xlsx`）已在 `.gitignore` 中排除，不要提交。
+
+修改代码与发版流程见 [AGENT.md](AGENT.md)。
