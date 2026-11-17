@@ -10,7 +10,21 @@
 
 打开 <https://bill.pi-app.kdns.fr/hsbc_bill_export.user.js>，Tampermonkey 会弹出安装页。
 
-## 开发与部署
+## 发版（网站与脚本分开管理）
+
+| 发布什么 | 先改版本号 | Release 标签 |
+|---|---|---|
+| 网站（`web/`，含看板用的计算核心） | `web/package.json` 的 `version` | `web-vX.Y.Z` |
+| 油猴脚本（供安装/更新的 `.user.js`） | 脚本头部 `@version` | `script-vX.Y.Z` |
+
+```sh
+gh release create web-v1.1.0 --title "网站 1.1.0" --generate-notes
+gh release create script-v4.3.0 --title "油猴脚本 4.3.0" --generate-notes
+```
+
+发布任一 Release 都会触发 `.github/workflows/deploy.yml`：网站取最新的 `web-v*`，脚本取最新的 `script-v*`，标签与文件版本不一致会直接失败。线上版本见 `/version.json`。需要仓库密钥 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
+
+## 开发与本地部署
 
 ```sh
 cd web

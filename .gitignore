@@ -13,3 +13,4 @@ node_modules/
 web/public/core.js
 web/public/hsbc_bill_export.user.js
 web/public/vendor/
+web/public/version.json

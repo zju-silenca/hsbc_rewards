@@ -1,4 +1,7 @@
-# 发布 Release 后自动部署看板到 Cloudflare（也可以在 Actions 页面手动运行）
+# 网站与油猴脚本分开发版，任何一边发布 Release 都会重新部署 Cloudflare：
+#   web-v1.2.0     → 网站（web/ 目录 + 看板用的计算核心）取这个标签；版本号 = web/package.json 的 version
+#   script-v4.2.1  → 供安装/更新的油猴脚本取这个标签；版本号 = 脚本里的 @version
+# 另一边沿用它最新的标签（还没有标签时用当前分支）。也可以在 Actions 页面手动运行（两边都取最新标签）。
 name: Deploy to Cloudflare
 
 on:
@@ -15,28 +18,41 @@ permissions:
 
 jobs:
   deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.release.tag_name, 'web-v') ||
+      startsWith(github.event.release.tag_name, 'script-v')
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name || github.ref }}
+          fetch-depth: 0  # 需要全部标签
 
-      # 油猴只在 @version 变大时才提示更新：Release 标签必须和脚本版本一致（v4.2.1 ↔ @version 4.2.1）
-      - name: Check tag matches @version
-        if: github.event_name == 'release'
-        working-directory: .
+      - name: Resolve versions
+        id: v
         env:
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          ver=$(sed -n 's|^// @version *||p' hsbc_bill_export.user.js | tr -d '[:space:]')
-          echo "tag=$TAG  @version=$ver"
-          if [ "${TAG#v}" != "$ver" ]; then
-            echo "::error::Release 标签 $TAG 与脚本 @version $ver 不一致，请先改脚本版本号再发布"
-            exit 1
-          fi
+          latest() { git tag -l "$1*" --sort=-v:refname | head -n1; }
+          case "$TAG" in
+            web-v*)    web="$TAG";            script="$(latest script-v)" ;;
+            script-v*) web="$(latest web-v)"; script="$TAG" ;;
+            *)         web="$(latest web-v)"; script="$(latest script-v)" ;;
+          esac
+          web="${web:-$GITHUB_SHA}"; script="${script:-$GITHUB_SHA}"
+          echo "网站取 $web，油猴脚本取 $script"
+
+          # 标签版本号必须与文件里的一致（油猴只在 @version 变大时提示更新）
+          webver=$(git show "$web:web/package.json" | node -p 'JSON.parse(require("fs").readFileSync(0)).version')
+          scriptver=$(git show "$script:hsbc_bill_export.user.js" | sed -n 's|^// @version *||p' | tr -d '[:space:]')
+          case "$web" in web-v*) [ "${web#web-v}" = "$webver" ] || { echo "::error::$web 与 web/package.json 版本 $webver 不一致"; exit 1; } ;; esac
+          case "$script" in script-v*) [ "${script#script-v}" = "$scriptver" ] || { echo "::error::$script 与脚本 @version $scriptver 不一致"; exit 1; } ;; esac
+
+          git show "$script:hsbc_bill_export.user.js" > "$RUNNER_TEMP/dist.user.js"
+          git checkout -q "$web"
+          echo "web=$webver" >> "$GITHUB_OUTPUT"
+          echo "script=$scriptver" >> "$GITHUB_OUTPUT"
+          echo "### 部署：网站 $webver（$web）· 油猴脚本 $scriptver（$script）" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/setup-node@v4
         with:
@@ -45,23 +61,25 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - run: npm ci
+        working-directory: web
 
       - name: Deploy
+        working-directory: web
         run: npm run deploy
         env:
+          SCRIPT_SRC: ${{ runner.temp }}/dist.user.js
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Verify
-        working-directory: .
+        env:
+          WANT: '{"web":"${{ steps.v.outputs.web }}","script":"${{ steps.v.outputs.script }}"}'
         run: |
-          ver=$(sed -n 's|^// @version *||p' hsbc_bill_export.user.js | tr -d '[:space:]')
-          live=""
           for i in 1 2 3 4 5 6; do
-            live=$(curl -fsS "https://bill.pi-app.kdns.fr/hsbc_bill_export.user.js?t=$(date +%s)" | sed -n 's|^// @version *||p' | tr -d '[:space:]') || true
-            echo "线上 @version=$live"
-            [ "$live" = "$ver" ] && exit 0
+            got=$(curl -fsS "https://bill.pi-app.kdns.fr/version.json?t=$(date +%s)" | node -p 'const v=JSON.parse(require("fs").readFileSync(0));JSON.stringify({web:v.web,script:v.script})') || true
+            echo "线上 $got，期望 $WANT"
+            [ "$got" = "$WANT" ] && exit 0
             sleep 10
           done
-          echo "::error::线上脚本版本 $live 与仓库 $ver 不一致"
+          echo "::error::线上版本与期望不一致"
           exit 1
