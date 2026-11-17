@@ -30,7 +30,7 @@ gh release create script-v4.3.0 --title "油猴脚本 4.3.0" --generate-notes
 cd web
 npm install
 npm run dev      # 本地 http://localhost:8787
-npm run deploy   # 先 sync（复制脚本与 ExcelJS 到 public/），再 wrangler deploy
+npm run deploy   # 先 build（生成 dist/，CSS/JS 带内容哈希），再 wrangler deploy
 ```
 
 账单数据（`.har`、`.xlsx`）已在 `.gitignore` 中排除，不要提交。

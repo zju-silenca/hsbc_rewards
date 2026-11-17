@@ -1,11 +1,15 @@
-/* 底部页面导航：向下滚动时收起，向上滚动或回到页面顶部时出现 */
+/* 页面导航（手机在底部、电脑在顶部）：向下滚动时收起，向上滚动或回到页面顶部时出现 */
 (function () {
   'use strict';
   const nav = document.getElementById('pagenav');
   if (!nav) return;
   const TOP = 24, STEP = 8;
   let last = window.scrollY, ticking = false;
-  const set = (away) => nav.classList.toggle('away', away);
+  const set = (away) => {
+    nav.classList.toggle('away', away);
+    // 电脑上导航在顶部：同步让顶栏上移/下移
+    document.documentElement.classList.toggle('nav-away', away);
+  };
   function update() {
     ticking = false;
     const y = Math.max(0, window.scrollY);

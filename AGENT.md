@@ -11,23 +11,23 @@
 ```
 hsbc_bill_export.user.js     油猴脚本 = 计算核心（唯一的一份算法）
 web/
-  public/                    网站静态文件
+  public/                    网站源文件（只放手写文件）
     index.html app.js        返利看板
     offers.html              优惠信息（施工中）
     app.css                  全站样式（含深色模式）
-    theme.js nav.js          非看板页共用：深浅色切换；底部悬浮导航
-    _headers                 CSP 等安全响应头
-  scripts/sync.mjs           部署前生成 public/ 下的派生文件
+    theme.js                 非看板页的深浅色切换
+    nav.js                   页面导航（手机在底部、电脑在顶部，下滑隐藏）
+    _headers                 CSP、缓存等响应头
+  scripts/build.mjs          构建 dist/（Cloudflare 实际上传的目录）
   scripts/deploy-ci.mjs      CI 部署（versions upload + deploy）
-  wrangler.jsonc             Worker 配置（静态资源 + 自定义域名）
+  wrangler.jsonc             Worker 配置（静态资源目录 dist/ + 自定义域名）
 .github/workflows/deploy.yml 发布 Release 后自动部署
 ```
 
-下列文件由 `npm run sync` 生成，已加入 `.gitignore`，不要手改，也不要提交：
-- `web/public/core.js`：看板加载的计算核心，复制自根目录脚本。
-- `web/public/hsbc_bill_export.user.js`：供用户安装、更新的脚本。
-- `web/public/vendor/`：ExcelJS。
-- `web/public/version.json`：线上版本号，CI 用它核对部署结果。
+`web/dist/` 由 `npm run build` 生成，已加入 `.gitignore`，不要手改，也不要提交。构建会做这些事：
+- 把 `public/` 下所有 CSS/JS、计算核心（根目录脚本）和 ExcelJS 改名为 `assets/<名>.<内容哈希>.<扩展名>`，并替换 HTML 里的引用。HTML 里新增本地 CSS/JS 时直接写源文件名即可；漏掉没打包的引用，构建会报错。
+- 复制 HTML 和 `_headers`。
+- 生成 `hsbc_bill_export.user.js`（供用户安装、更新的脚本，地址固定，不加哈希）和 `version.json`（线上版本号，CI 用它核对部署结果）。
 
 ## 必须遵守的约束
 
@@ -36,7 +36,7 @@ web/
 - **代码里不要硬编码个人信息**：卡号、发卡日、登记日、姓名、账号 ID 等都不行。个人设置一律走「参数」，看板存在本机 localStorage，脚本存在油猴存储。脚本要保持通用。
 - **网站禁止任何网络请求**。`_headers` 里的 CSP 是 `connect-src 'none'`，账单只在浏览器本地处理。
   - 不要引入第三方脚本、CDN、统计或字体服务。
-  - 依赖放进 `public/vendor/`，并由 `sync.mjs` 复制。
+  - 第三方库通过 npm 安装，在 `build.mjs` 的 `assets` 里登记，打包进 `assets/`。
   - 页面里不要写内联脚本或内联样式，CSP 不允许。
 - **脚本保存时只保留必要字段**：`slimTx` 会去掉完整卡号（只留后四位）和持卡人姓名。新增要保存的字段时，先确认它不含敏感信息。
 
@@ -77,6 +77,11 @@ web/
 
   另外 `@downloadURL` 和 `@updateURL` 也写着看板域名，它们决定油猴从哪里安装、更新脚本，改域名时同样要改。
 
+### 缓存
+- `_headers` 让 `/assets/*` 永久缓存（`immutable`），其余文件（HTML、`.user.js`、`version.json`）都是 `no-cache`：每次向服务器确认，没变化就返回 304。
+- 所以 CSS/JS 必须经过构建、带上哈希才能被引用。不要在 `assets/` 之外放需要长期缓存的文件，也不要给 HTML 加长缓存，否则发版后用户拿不到新页面。
+- 静态资源请求在 Cloudflare 上免费、不限量，不占 Workers 请求额度。前提是不添加 Worker 脚本，也不配置 `run_worker_first`。
+
 ### 本地存储
 - localStorage 只放便利性设置，比如参数、手动修改、主题。每次读写都要包在 try/catch 里，读不到时页面也要能正常显示。
 - 改存储格式时写迁移逻辑，参考 `app.js` 的 `migrate()`：旧的 `br:params` / `br:actual` 会迁移成按卡号分组的结构。
@@ -86,7 +91,7 @@ web/
 ```sh
 cd web
 npm install
-npm run dev        # sync + wrangler dev，访问 http://localhost:8787
+npm run dev        # build + wrangler dev，访问 http://localhost:8787（改了源文件要重新运行）
 ```
 
 - **看板**：拖入 `.har` 或交易 JSON 即可看到数据，不需要油猴。
@@ -102,7 +107,7 @@ npm run dev        # sync + wrangler dev，访问 http://localhost:8787
 
 | 发布内容 | 先改版本号 | Release 标签 |
 |---|---|---|
-| 网站（`web/` 下的全部内容，包括看板使用的计算核心 `core.js`） | `web/package.json` 的 `version`，然后运行 `npm install --package-lock-only` 同步 lock 文件 | `web-vX.Y.Z` |
+| 网站（`web/` 下的全部内容，包括看板使用的计算核心） | `web/package.json` 的 `version`，然后运行 `npm install --package-lock-only` 同步 lock 文件 | `web-vX.Y.Z` |
 | 油猴脚本（供安装和更新的 `.user.js`） | 脚本头部的 `// @version` | `script-vX.Y.Z` |
 
 ### 步骤

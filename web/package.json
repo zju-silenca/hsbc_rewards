@@ -1,13 +1,13 @@
 {
   "name": "bill-rewards",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "信用卡账单返利看板（纯前端，Cloudflare Workers 静态资源）",
   "scripts": {
-    "sync": "node scripts/sync.mjs",
-    "dev": "npm run sync && wrangler dev",
-    "deploy": "npm run sync && wrangler deploy",
-    "deploy:ci": "npm run sync && node scripts/deploy-ci.mjs"
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:ci": "npm run build && node scripts/deploy-ci.mjs"
   },
   "devDependencies": {
     "exceljs": "4.4.0",
