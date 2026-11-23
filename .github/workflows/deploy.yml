@@ -2,14 +2,14 @@
 #   web-v1.2.0     → 网站（web/ 目录 + 看板用的计算核心）取这个标签；版本号 = web/package.json 的 version
 #   script-v4.2.1  → 供安装/更新的油猴脚本取这个标签；版本号 = 脚本里的 @version
 # 另一边沿用它最新的标签（还没有标签时用当前分支）。也可以在 Actions 页面手动运行（两边都取最新标签）。
-# push 到 main → 开发测试站 hsbc-rewards-dev（网站和脚本都取这次提交，脚本是独立的 dev 版）
+# push 到 dev 分支 → 开发测试站 hsbc-rewards-dev（网站和脚本都取这次提交，脚本是独立的 dev 版）；main 上的提交不部署
 name: Deploy to Cloudflare
 
 on:
   release:
     types: [published]
   push:
-    branches: [main]
+    branches: [dev]
   workflow_dispatch:
 
 concurrency:

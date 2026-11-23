@@ -98,7 +98,7 @@ npm run dev        # build + wrangler dev，访问 http://localhost:8787（改�
 
 - **看板**：拖入 `.har` 或交易 JSON 即可看到数据，不需要油猴。
 - **看板和脚本联调**：在浏览器里安装 `http://localhost:8787/hsbc_bill_export.user.js`，并临时给脚本加上 `@match http://localhost:8787/*`。`CONFIG.VIEWER_ORIGINS` 里已经包含 localhost。
-- **开发测试站**：`https://hsbc-rewards-dev.pi-app.kdns.fr/`。push 到 `main` 后 CI 自动部署（网站和脚本都取这次提交），不影响正式站。
+- **开发测试站**：`https://hsbc-rewards-dev.pi-app.kdns.fr/`。`dev` 分支比 `main` 新，放还没发布的改动。push 到 `dev` 后 CI 自动部署开发测试站（网站和脚本都取这次提交），不影响正式站；合入 `main` 不会触发部署。
   - 在这里安装的是独立的 dev 脚本：名字带「(dev)」，命名空间不同，油猴里和正式版并存、存储分开；版本号后面带构建时间，每次部署后都能检查到更新。
   - dev 脚本同样运行在汇丰网银上，面板标题是「账单导出 dev」。和正式版同时启用会出现两个面板，测试时可以先停用正式版。
   - 开发测试站带 `X-Robots-Tag: noindex`。线上 `/version.json` 里的 `commit` 是部署的提交。
@@ -120,7 +120,7 @@ npm run dev        # build + wrangler dev，访问 http://localhost:8787（改�
 ### 步骤
 1. 改代码，并按上面的约束自测。
 2. 改对应的版本号，遵循语义化版本：修复改 Z，新功能改 Y，不兼容改动改 X。
-3. 在新分支上提交，开 PR 合入 `main`。`main` 禁止直接推送，只接受 PR，合并方式只能是 squash。合入后会自动部署开发测试站。
+3. 改动先进 `dev` 分支，在开发测试站上验证。没问题后开 PR 合入 `main`。`main` 禁止直接推送，只接受 PR，合并方式只能是 squash。
 4. 发布 Release，例如：
 
    ```sh
