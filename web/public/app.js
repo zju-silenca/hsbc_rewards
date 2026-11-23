@@ -758,6 +758,8 @@
     const tpl = $('#tpl-help');
     // 第一步按设备区分：电脑装暴力猴扩展，手机装 Edge 再装扩展
     const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    // 手机上去掉 accept：iOS 不认识 .har 扩展名，按 accept 过滤会把 .har 文件全部置灰；格式由 importFile 自己校验
+    if (mobile) $('#file').removeAttribute('accept');
     tpl.content.querySelectorAll(`[data-os]:not([data-os="${mobile ? 'mobile' : 'pc'}"])`).forEach((el) => el.remove());
     document.querySelectorAll('[data-help]').forEach((el) => el.replaceChildren(tpl.content.cloneNode(true)));
     addStayLinks();
