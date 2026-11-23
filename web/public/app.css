@@ -89,6 +89,9 @@ code { font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-r
 .btn.ghost { background: transparent; }
 .btn.small { padding: 3px 9px; font-size: 12px; }
 .btn.icon { width: 34px; padding: 6px 0; }
+a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+a.btn.icon { align-self: stretch; }
+.gh-link { display: inline-flex; align-items: center; gap: 4px; vertical-align: -2px; }
 .btn:focus-visible, .seg button:focus-visible, .tabs button:focus-visible, .toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 main { max-width: 1240px; margin: 0 auto; padding: 16px; }
