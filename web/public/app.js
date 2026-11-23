@@ -638,7 +638,8 @@
     const j = JSON.parse(text);
     if (j?.log?.entries) {
       const { txs, statementDay } = Core.parseHar(text);
-      payload = { txs, statementDay };
+      const bill = j.log._bill || {}; // 脚本「导出 HAR」附带的账单日和参数
+      payload = { txs, statementDay: bill.statementDay || statementDay, settings: bill.settings || {} };
     } else if (Array.isArray(j)) payload = { txs: j };
     else if (Array.isArray(j?.txs)) payload = j;
     else if (Array.isArray(j?.transactions)) payload = { txs: j.transactions };

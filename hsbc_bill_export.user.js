@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSBC 信用卡账单导出 + Pulse 返利计算
 // @namespace    hsbc-bill-export
-// @version      4.2.5
+// @version      4.2.6
 // @description  在汇丰网银页面捕获/拉取信用卡交易记录，累计保存并在在线看板查看，一键导出 Excel（全公式：基础奖赏0.4%、Pulse特别奖赏2%、赏世界2%、内地餐饮3%、迎新礼、按入账日对账）
 // @match        https://www.hsbc.com.hk/*
 // @run-at       document-start
@@ -1234,25 +1234,50 @@
     setStatus(`拉取完成：${pages} 页，本次 ${state.txs.length} 条`);
   }
 
-  // ---- 导入 HAR（离线备用） ----
-  function importHar(file) {
-    const fr = new FileReader();
-    fr.onload = () => {
-      try {
-        const { txs, statementDay } = parseHar(fr.result);
-        state.txs = dedupe(state.txs.concat(txs));
-        if (statementDay) state.statementDay = statementDay;
-        saveNow();
-        setStatus(`HAR 导入完成：${txs.length} 条`);
-      } catch (err) { alert('HAR 解析失败：' + err.message); }
+  // ---- 导出 HAR：看板检测不到脚本时（如部分手机浏览器），手动导出再在看板「导入文件」----
+  // 生成标准 HAR 结构：账单放在 /v2/transactions? 响应里、账单日放在 /accounts/credit-cards/ 响应里，
+  // 旧版看板的 parseHar 也能直接读；参数（发卡日、登记日）另放在 log._bill，新版看板会一并读取
+  function exportHar() {
+    const store = saveNow();
+    if (!store?.txs?.length) { alert('还没有交易数据。请先点击页面信用卡展开详情账单，再点「拉取全部」。'); return; }
+    if (!confirm('导出的文件包含卡号尾号、交易明细等账单隐私数据，请妥善保管，不要发给他人或上传到公开的地方。\n\n继续导出？')) return;
+    const now = new Date();
+    const day = store.statementDay || CONFIG.STATEMENT_DAY;
+    const entry = (url, body) => ({
+      startedDateTime: now.toISOString(), time: 0,
+      request: { method: 'GET', url, httpVersion: 'HTTP/1.1', headers: [], queryString: [], cookies: [], headersSize: -1, bodySize: 0 },
+      response: {
+        status: 200, statusText: 'OK', httpVersion: 'HTTP/1.1', headers: [], cookies: [], redirectURL: '', headersSize: -1, bodySize: -1,
+        content: { size: -1, mimeType: 'application/json', text: JSON.stringify(body) },
+      },
+      cache: {}, timings: { send: 0, wait: 0, receive: 0 },
+    });
+    const har = {
+      log: {
+        version: '1.2',
+        creator: { name: 'hsbc-bill-export', version: (typeof GM_info !== 'undefined' && GM_info?.script?.version) || '' },
+        entries: [
+          entry('https://www.hsbc.com.hk/bill-export/accounts/credit-cards/statement', {
+            creditCardAccountDetail: { lastStatementCycle: { statementDate: `2000-01-${pad(day)}` } },
+          }),
+          entry('https://www.hsbc.com.hk/bill-export/v2/transactions?all=1', { transactions: store.txs }),
+        ],
+        _bill: { statementDay: day, settings: loadSettings(), updatedAt: store.updatedAt },
+      },
     };
-    fr.readAsText(file);
+    const blob = new Blob([JSON.stringify(har)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.download = `信用卡账单_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}.har`;
+    a.href = URL.createObjectURL(blob);
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    setStatus(`已导出 HAR（${store.txs.length} 条），可在看板点「导入文件」查看`);
   }
 
   async function exportExcel() {
     const store = saveNow();
     const txs = store?.txs?.length ? store.txs : state.txs;
-    if (!txs.length) { alert('还没有交易数据。请先打开交易记录页面，或点「拉取全部」/「导入HAR」。'); return; }
+    if (!txs.length) { alert('还没有交易数据。请先点击页面信用卡展开详情账单，再点「拉取全部」。'); return; }
     if (typeof ExcelJS === 'undefined') { alert('ExcelJS 未加载（检查油猴 @require 是否被拦截）'); return; }
     const st = loadSettings();
     const day = state.statementDay || store?.statementDay || CONFIG.STATEMENT_DAY;
@@ -1280,7 +1305,7 @@
   // ---- 打开在线看板（数据由看板页上的同一个脚本从油猴存储读取，不经过网址和服务器）----
   function openViewer() {
     const store = saveNow();
-    if (!store?.txs?.length) { alert('还没有交易数据。请先打开交易记录页面，或点「拉取全部」/「导入HAR」。'); return; }
+    if (!store?.txs?.length) { alert('还没有交易数据。请先点击页面信用卡展开详情账单，再点「拉取全部」。'); return; }
     window.open(CONFIG.VIEWER_URL, '_blank', 'noopener,noreferrer');
     setStatus(`已打开在线看板（累计 ${store.txs.length} 条）`);
   }
@@ -1313,11 +1338,10 @@
           <button data-fetch>拉取全部</button>
           <button data-view style="background:#db0011;color:#fff;border:0;border-radius:4px;padding:2px 8px">在线查看</button>
           <button data-export>导出 Excel</button>
-          <button data-har>导入HAR</button>
+          <button data-har>导出 HAR</button>
           <button data-clear>清空已保存</button>
         </div>
         <div data-status style="margin-top:4px;color:#888;font-size:12px"></div>
-        <input type="file" accept=".har,application/json" data-file style="display:none">
       </div>`;
     document.body.appendChild(box);
     const q = (s) => box.querySelector(s);
@@ -1331,8 +1355,7 @@
     q('[data-fetch]').onclick = () => fetchAll().catch((e) => { setStatus('拉取失败：' + e.message); alert('主动拉取失败：' + e.message + '\n可在网页上手动点「显示更多」翻页，脚本会自动捕获。'); });
     q('[data-export]').onclick = () => exportExcel().catch((e) => { console.error(e); alert('导出失败：' + e.message); });
     q('[data-view]').onclick = () => { try { openViewer(); } catch (e) { console.error(e); alert('打开在线看板失败：' + e.message); } };
-    q('[data-har]').onclick = () => q('[data-file]').click();
-    q('[data-file]').onchange = (e) => { if (e.target.files[0]) importHar(e.target.files[0]); e.target.value = ''; };
+    q('[data-har]').onclick = () => { try { exportHar(); } catch (e) { console.error(e); alert('导出 HAR 失败：' + e.message); } };
     q('[data-clear]').onclick = () => {
       if (!confirm('清空油猴里累计保存的全部账单？（本次捕获的也一并清空）')) return;
       GM_deleteValue(STORE_KEY); state.txs = []; updateUI(); setStatus('已清空');

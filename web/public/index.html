@@ -34,7 +34,7 @@
       <div class="drop" id="drop">
         <h2>还没有账单数据</h2>
         <div class="help" data-help></div>
-        <p class="muted">也可以把浏览器保存的 <code>.har</code> 文件拖到这里，或点右上角「导入文件」。</p>
+        <p class="muted">也可以把脚本导出的 <code>.har</code> 文件拖到这里，或点右上角「导入文件」。</p>
       </div>
     </section>
 
@@ -131,7 +131,8 @@
       <li><a class="install" href="hsbc_bill_export.user.js">安装 / 更新油猴脚本</a>（脚本同时运行在汇丰网银和本网站）</li>
       <li>安装完成后，打开汇丰网银 <a href="https://www.hsbc.com.hk/zh-cn/online/dashboard/" target="_blank" rel="noopener">https://www.hsbc.com.hk/zh-cn/online/dashboard/</a> 并登录</li>
       <li>点击页面上的信用卡，展开详情账单，再点右下角脚本面板的 <b>拉取全部</b>，账单会累计保存在油猴里</li>
-      <li>点脚本面板的 <b>在线查看</b> 或直接打开本网站，脚本会把账单交给这个页面</li>
+      <li>点脚本面板的 <b>在线查看</b> 或直接打开本网站，脚本会把账单交给这个页面。
+        如果本页检测不到脚本（部分手机浏览器），在脚本面板点 <b>导出 HAR</b>，再在本页右上角点 <b>导入文件</b> 选择这个文件。导出的文件含卡号尾号和交易明细，请妥善保管</li>
     </ol>
     <p class="muted small">账单不经过网址，也不会上传：页面禁止了一切网络请求，所有计算都在本机浏览器里完成。</p>
   </template>
