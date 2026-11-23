@@ -200,6 +200,7 @@
     $('#btn-clear').disabled = !has;
     $('#btn-params').disabled = !has;
     $('#card-sel').hidden = !has;
+    $('#btn-help').hidden = !has;
     if (!has) { renderEmpty(); return; }
     compute();
     renderCardSel();
@@ -747,6 +748,17 @@
       if (v === undefined) delete params[f.k]; else params[f.k] = v;
       saveParams();
       render();
+    });
+    // 使用帮助：同一份内容放进空白页和帮助弹窗
+    const tpl = $('#tpl-help');
+    document.querySelectorAll('[data-help]').forEach((el) => el.replaceChildren(tpl.content.cloneNode(true)));
+    const help = $('#dlg-help');
+    $('#btn-help').onclick = () => help.showModal();
+    help.querySelectorAll('[data-close]').forEach((b) => { b.onclick = () => help.close(); });
+    help.addEventListener('click', (e) => {
+      if (e.target !== help) return; // 只处理点在遮罩上的情况
+      const r = help.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) help.close();
     });
     const dlg = $('#dlg-params');
     $('#btn-params').onclick = () => { if (isAll()) return; renderParams(); dlg.showModal(); };

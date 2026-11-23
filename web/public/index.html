@@ -20,6 +20,7 @@
     <div class="actions">
       <select class="btn card-sel" id="card-sel" aria-label="选择信用卡" hidden></select>
       <button class="btn" id="btn-params" type="button" disabled>⚙ 参数</button>
+      <button class="btn" id="btn-help" type="button" hidden>? 帮助</button>
       <button class="btn" id="btn-import" type="button">导入文件</button>
       <button class="btn primary" id="btn-export" type="button" disabled>导出 Excel</button>
       <button class="btn ghost" id="btn-clear" type="button" disabled>清除数据</button>
@@ -32,13 +33,8 @@
     <section id="empty" class="empty">
       <div class="drop" id="drop">
         <h2>还没有账单数据</h2>
-        <ol>
-          <li><a class="install" href="hsbc_bill_export.user.js">安装 / 更新油猴脚本</a>（需先装好 Tampermonkey 扩展；脚本同时运行在汇丰网银和本网站）</li>
-          <li>在汇丰网银打开信用卡交易记录，右下角面板点 <b>拉取全部</b>，账单会累计保存在油猴里</li>
-          <li>点 <b>在线查看</b> 或直接打开本网站，脚本会把账单交给这个页面</li>
-        </ol>
+        <div class="help" data-help></div>
         <p class="muted">也可以把浏览器保存的 <code>.har</code> 文件拖到这里，或点右上角「导入文件」。</p>
-        <p class="muted small">账单不经过网址，也不会上传：页面禁止了一切网络请求，所有计算都在本机浏览器里完成。</p>
       </div>
     </section>
 
@@ -121,7 +117,29 @@
     </section>
   </main>
 
-  <dialog id="dlg-params" aria-labelledby="dlg-title">
+  <!-- 使用帮助：没有账单时显示在空白页，有账单时点「帮助」弹出 -->
+  <template id="tpl-help">
+    <ol>
+      <li><a class="install" href="hsbc_bill_export.user.js">安装 / 更新油猴脚本</a>（需先装好 Tampermonkey 扩展；脚本同时运行在汇丰网银和本网站）</li>
+      <li>安装完成后，打开汇丰网银 <a href="https://www.hsbc.com.hk/zh-cn/online/dashboard/" target="_blank" rel="noopener">https://www.hsbc.com.hk/zh-cn/online/dashboard/</a> 并登录</li>
+      <li>点击页面上的信用卡，展开详情账单，再点右下角脚本面板的 <b>拉取全部</b>，账单会累计保存在油猴里</li>
+      <li>点脚本面板的 <b>在线查看</b> 或直接打开本网站，脚本会把账单交给这个页面</li>
+    </ol>
+    <p class="muted small">账单不经过网址，也不会上传：页面禁止了一切网络请求，所有计算都在本机浏览器里完成。</p>
+  </template>
+
+  <dialog id="dlg-help" class="dlg dlg-help" aria-labelledby="dlg-help-title">
+    <div class="dlg-h">
+      <h2 id="dlg-help-title">使用帮助</h2>
+      <button type="button" class="btn ghost icon" data-close aria-label="关闭">✕</button>
+    </div>
+    <div class="help" data-help></div>
+    <div class="dlg-f end">
+      <button type="button" class="btn primary" data-close>知道了</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-params" class="dlg" aria-labelledby="dlg-title">
     <div class="dlg-h">
       <h2 id="dlg-title">参数</h2>
       <button type="button" class="btn ghost icon" id="dlg-close" aria-label="关闭">✕</button>

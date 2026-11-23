@@ -298,15 +298,21 @@ section > .card { margin-bottom: 16px; }
 .hbars { grid-template-columns: 1fr; }
 .hb { grid-template-columns: minmax(0, 220px) 1fr auto; }
 
-dialog#dlg-params {
+dialog.dlg {
   width: min(920px, calc(100vw - 32px)); max-height: calc(100vh - 48px);
   border: 1px solid var(--border); border-radius: 16px; padding: 16px 20px;
   background: var(--surface); color: var(--text); box-shadow: 0 12px 48px rgba(0,0,0,.25);
 }
-dialog#dlg-params::backdrop { background: rgba(0,0,0,.35); }
+dialog.dlg::backdrop { background: rgba(0,0,0,.35); }
 .dlg-h { display: flex; justify-content: space-between; align-items: center; }
 .dlg-h h2 { font-size: 17px; }
 .dlg-f { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+.dlg-f.end { justify-content: flex-end; }
+dialog.dlg-help { width: min(600px, calc(100vw - 32px)); }
+.help ol { padding-left: 20px; color: var(--text-2); }
+.help li { margin: 6px 0; }
+.help a { overflow-wrap: anywhere; }
+.dlg-help .help { margin: 12px 0; }
 .chip.GOOGLEPAY, .chip.SAMSUNGPAY { background: var(--ap-bg); color: var(--ap-ink); }
 .params fieldset { align-content: start; }
 
