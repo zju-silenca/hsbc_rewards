@@ -1,42 +1,40 @@
 # HSBC 信用卡账单导出 + 返利看板
 
-- `hsbc_bill_export.user.js`：油猴脚本，同时也是计算核心。
-  - 在汇丰网银捕获、拉取信用卡交易，累计保存在油猴存储里。
-  - 一键导出全公式 Excel。
-  - 在看板网站上把账单交给页面（postMessage，不经过网址和服务器）。
-- `web/`：Cloudflare Worker 静态站点（纯前端，CSP 禁止一切网络请求），按卡号展示消费与返利。
+汇丰香港信用卡（Pulse 银联双币钻石卡等）账单工具：
+- 在网银上一键拉取交易记录；
+- 估算各类奖赏钱（RC）返利；
+- 导出全公式 Excel。
 
-## 安装脚本
+## 功能
 
-打开 <https://hsbc-rewards.pi-app.kdns.fr/hsbc_bill_export.user.js>，Tampermonkey 会弹出安装页。
+- **一键拉取账单**：油猴脚本在汇丰网银页面翻页拉取全部交易，按卡号累计保存在本机的油猴存储里。
+- **返利看板**：<https://hsbc-rewards.pi-app.kdns.fr/>
+  - 按卡号分别展示消费和返利。
+  - 返利按类型估算：基础奖赏、Pulse 特别奖赏、赏世界、内地餐饮、迎新礼。
+  - 还有额度进度、每日消费、消费类型，以及和实际到账 RC 的对账。
+- **导出 Excel**：每张卡一个文件，汇总全部用公式。修改参数表或单笔交易的「计返利」，整张表会自动重算。
 
-## 发版（网站与脚本分开管理）
+## 隐私
 
-| 发布什么 | 先改版本号 | Release 标签 |
-|---|---|---|
-| 网站（`web/`，含看板用的计算核心） | `web/package.json` 的 `version` | `web-vX.Y.Z` |
-| 油猴脚本（供安装/更新的 `.user.js`） | 脚本头部 `@version` | `script-vX.Y.Z` |
+- 账单只在你自己的浏览器里处理，不经过网址传递，也不上传任何服务器。
+- 看板网站通过 CSP 禁止了一切网络请求。
+- 导出的 Excel / HAR 文件含卡号尾号和交易明细，请妥善保管。
 
-```sh
-gh release create web-v1.1.0 --title "网站 1.1.0" --generate-notes
-gh release create script-v4.3.0 --title "油猴脚本 4.3.0" --generate-notes
-```
+## 使用
 
-发布任一 Release 都会触发 `.github/workflows/deploy.yml`：网站取最新的 `web-v*`，脚本取最新的 `script-v*`，标签与文件版本不一致会直接失败。线上版本见 `/version.json`。需要仓库密钥 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
+1. **安装扩展**
+   - 电脑：在浏览器里安装「暴力猴」（Violentmonkey）或 Tampermonkey。打不开 Chrome 扩展商店时，可以改用 Microsoft Edge。
+   - 手机：在应用商店安装 Microsoft Edge，再装扩展「暴力猴」；苹果手机用 Stay。
+2. **安装脚本**：打开 <https://hsbc-rewards.pi-app.kdns.fr/hsbc_bill_export.user.js>，按扩展的提示安装。
+3. **拉取账单**：登录 [汇丰网银](https://www.hsbc.com.hk/zh-cn/online/dashboard/)，点击信用卡展开详情账单，再点右下角面板的「拉取全部」。
+4. **查看返利**：点面板的「在线查看」打开看板，或点「导出 Excel」。
+   - 看板检测不到脚本时（部分手机浏览器），可以在面板点「导出 HAR」，再在看板点「导入文件」。
 
-## 开发测试站
+## 说明
 
-push 到 `main` 会自动部署到 https://hsbc-rewards-dev.pi-app.kdns.fr/ ，在这里可以安装独立的 dev 版脚本，与正式版互不影响。
+- 本项目与汇丰银行无关。返利按公开条款估算，实际以银行入账为准。
+- 欢迎提 issue 反馈问题或补充优惠规则。参与开发请先阅读 [AGENT.md](AGENT.md)。
 
-## 开发与本地部署
+## License
 
-```sh
-cd web
-npm install
-npm run dev      # 本地 http://localhost:8787
-npm run deploy   # 先 build（生成 dist/，CSS/JS 带内容哈希），再 wrangler deploy
-```
-
-账单数据（`.har`、`.xlsx`）已在 `.gitignore` 中排除，不要提交。
-
-修改代码与发版流程见 [AGENT.md](AGENT.md)。
+[MIT](LICENSE)
