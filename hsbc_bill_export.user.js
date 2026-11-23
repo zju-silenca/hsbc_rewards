@@ -11,7 +11,7 @@
 // @grant        GM_deleteValue
 // @grant        GM_addValueChangeListener
 // @grant        unsafeWindow
-// @require      https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
+// @require      https://cdn.jsdmirror.com/npm/exceljs@4.4.0/dist/exceljs.min.js
 // @downloadURL  https://hsbc-rewards.pi-app.kdns.fr/hsbc_bill_export.user.js
 // @updateURL    https://hsbc-rewards.pi-app.kdns.fr/hsbc_bill_export.user.js
 // ==/UserScript==
