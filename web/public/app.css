@@ -249,6 +249,7 @@ section > .card { margin-bottom: 16px; }
 .params input, .params select { width: 100%; }
 
 .foot { text-align: center; margin: 24px 0 8px; }
+.foot.friends { margin-top: 4px; }
 
 @media (max-width: 640px) {
   .kpi .value { font-size: 22px; }

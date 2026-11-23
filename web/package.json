@@ -1,7 +1,7 @@
 {
   "name": "bill-rewards",
   "private": true,
-  "version": "1.3.6",
+  "version": "1.3.7",
   "description": "信用卡账单返利看板（纯前端，Cloudflare Workers 静态资源）",
   "license": "MIT",
   "scripts": {
