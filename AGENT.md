@@ -120,7 +120,7 @@ npm run dev        # build + wrangler dev，访问 http://localhost:8787（改�
 ### 步骤
 1. 改代码，并按上面的约束自测。
 2. 改对应的版本号，遵循语义化版本：修复改 Z，新功能改 Y，不兼容改动改 X。
-3. 提交并推送到 `main`。
+3. 在新分支上提交，开 PR 合入 `main`。`main` 禁止直接推送，只接受 PR，合并方式只能是 squash。合入后会自动部署开发测试站。
 4. 发布 Release，例如：
 
    ```sh
