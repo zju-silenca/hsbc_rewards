@@ -77,6 +77,7 @@ web/
   - `CONFIG.VIEWER_ORIGINS`
 
   另外 `@downloadURL` 和 `@updateURL` 也写着看板域名，它们决定油猴从哪里安装、更新脚本，改域名时同样要改。
+  开发测试站的域名写在 `scripts/build.mjs`（`PROD_HOST` / `DEV_HOST`）和 `wrangler.jsonc` 的 `env.dev` 里，改正式域名时也要同步 `PROD_HOST`。
 
 ### 缓存
 - `_headers` 让 `/assets/*` 永久缓存（`immutable`），其余文件（HTML、`.user.js`、`version.json`）都是 `no-cache`：每次向服务器确认，没变化就返回 304。
@@ -97,6 +98,11 @@ npm run dev        # build + wrangler dev，访问 http://localhost:8787（改�
 
 - **看板**：拖入 `.har` 或交易 JSON 即可看到数据，不需要油猴。
 - **看板和脚本联调**：在浏览器里安装 `http://localhost:8787/hsbc_bill_export.user.js`，并临时给脚本加上 `@match http://localhost:8787/*`。`CONFIG.VIEWER_ORIGINS` 里已经包含 localhost。
+- **开发测试站**：`https://hsbc-rewards-dev.pi-app.kdns.fr/`。push 到 `main` 后 CI 自动部署（网站和脚本都取这次提交），不影响正式站。
+  - 在这里安装的是独立的 dev 脚本：名字带「(dev)」，命名空间不同，油猴里和正式版并存、存储分开；版本号后面带构建时间，每次部署后都能检查到更新。
+  - dev 脚本同样运行在汇丰网银上，面板标题是「账单导出 dev」。和正式版同时启用会出现两个面板，测试时可以先停用正式版。
+  - 开发测试站带 `X-Robots-Tag: noindex`。线上 `/version.json` 里的 `commit` 是部署的提交。
+  - 这些都在 `scripts/build.mjs` 里用 `DEPLOY_ENV=dev` 生成，源码里不需要改动。
 - **改完界面后自查**：
   - 浅色和深色都看一遍。
   - 手机宽度（390px）下没有横向滚动。
@@ -132,5 +138,5 @@ npm run dev        # build + wrangler dev，访问 http://localhost:8787（改�
 - **计算规则改了，两边通常都要发版**：看板的计算核心跟着网站版本走，只发脚本版本的话，看板还在用旧算法。
 - **油猴只在 `@version` 变大时提示更新**。改了脚本就一定要调大版本号。
 - **CI 使用仓库密钥**：`CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID`，放在 Repository secrets 里。Token 只需要 Workers 的编辑权限。
-- **改自定义域名或路由时**，由维护者在本地用已登录的 wrangler 运行 `npm run deploy`，这个命令会同步域名配置。CI 不处理域名。
+- **改自定义域名或路由时**，由维护者在本地用已登录的 wrangler 运行 `npm run deploy`（开发测试站用 `npm run deploy:dev`），这个命令会同步域名配置。CI 不处理域名。
 - **手动重新部署**：在 Actions 页面点 Run workflow，两边都会取各自最新的标签。

@@ -24,6 +24,10 @@ gh release create script-v4.3.0 --title "油猴脚本 4.3.0" --generate-notes
 
 发布任一 Release 都会触发 `.github/workflows/deploy.yml`：网站取最新的 `web-v*`，脚本取最新的 `script-v*`，标签与文件版本不一致会直接失败。线上版本见 `/version.json`。需要仓库密钥 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
 
+## 开发测试站
+
+push 到 `main` 会自动部署到 https://hsbc-rewards-dev.pi-app.kdns.fr/ ，在这里可以安装独立的 dev 版脚本，与正式版互不影响。
+
 ## 开发与本地部署
 
 ```sh

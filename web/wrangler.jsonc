@@ -9,5 +9,13 @@
   // 自定义域名（workers.dev 在内地被阻断）
   "routes": [{ "pattern": "hsbc-rewards.pi-app.kdns.fr", "custom_domain": true }],
   "workers_dev": true,
-  "observability": { "enabled": false }
+  "observability": { "enabled": false },
+  // 开发测试环境：push 到 main 自动部署（见 .github/workflows/deploy.yml），与正式站数据、脚本互不影响
+  "env": {
+    "dev": {
+      "name": "bill-rewards-dev",
+      "routes": [{ "pattern": "hsbc-rewards-dev.pi-app.kdns.fr", "custom_domain": true }],
+      "workers_dev": false
+    }
+  }
 }
