@@ -10,3 +10,8 @@
 /assets/*
   ! Cache-Control
   Cache-Control: public, max-age=31536000, immutable
+
+# 油猴脚本：标明 UTF-8，否则 Safari 直接打开时中文会乱码
+/*.user.js
+  ! Content-Type
+  Content-Type: text/javascript; charset=utf-8

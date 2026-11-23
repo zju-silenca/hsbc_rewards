@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HSBC 信用卡账单导出 + Pulse 返利计算
 // @namespace    hsbc-bill-export
-// @version      4.2.4
+// @version      4.2.5
 // @description  在汇丰网银页面捕获/拉取信用卡交易记录，累计保存并在在线看板查看，一键导出 Excel（全公式：基础奖赏0.4%、Pulse特别奖赏2%、赏世界2%、内地餐饮3%、迎新礼、按入账日对账）
 // @match        https://www.hsbc.com.hk/*
 // @run-at       document-start
@@ -1102,6 +1102,8 @@
     if (typeof GM_addValueChangeListener === 'function') {
       GM_addValueChangeListener(STORE_KEY, (name, oldV, newV, remote) => { if (remote) send(); });
     }
+    // 主动推送一次：有的管理器（如 iOS 上的 Stay）注入较晚，可能错过看板早先发出的 br-request
+    send();
     return;
   }
 

@@ -28,6 +28,7 @@
   let rows = null, defaults = null, cfg = null, opts = null, sum = null;
   let units = [];           // 每张卡一份：{ card, cfg, opts, rows, defaults, sum, params, actuals }
   let bridge = false;
+  let detecting = true; // 启动后的几秒内还在等脚本，先不报「未检测到」
   let showPending = LS.get('br:pending', true);
   const ui = { card: LS.get('br:card', ''), tab: 'tx', dailyMode: 'txn', f: { q: '', ch: '', month: '', dining: false, noelig: false } };
 
@@ -226,8 +227,10 @@
     const note = $('#empty .bridge-note') || Object.assign(document.createElement('p'), { className: 'bridge-note small' });
     note.textContent = bridge
       ? '✔ 已检测到油猴脚本，但油猴里还没有保存账单。请先在汇丰网银用脚本拉取一次。'
-      : '未检测到油猴脚本：请确认脚本已更新到最新版，且 @match 包含本网站。';
-    note.className = `bridge-note small ${bridge ? 'ok' : 'warn'}`;
+      : detecting
+        ? '正在检测油猴脚本…'
+        : '未检测到油猴脚本：请确认脚本已安装、已启用并更新到最新版。iOS 上的 Stay 注入较慢，检测到后会自动显示账单。';
+    note.className = `bridge-note small ${bridge ? 'ok' : detecting ? '' : 'warn'}`;
     $('#drop').appendChild(note);
   }
 
@@ -650,6 +653,7 @@
     if (e.origin !== location.origin || !e.data || typeof e.data !== 'object') return;
     if (e.data.type !== 'br-data') return;
     bridge = true;
+    detecting = false;
     if (e.data.payload && Array.isArray(e.data.payload.txs) && e.data.payload.txs.length) {
       if (data?.source === 'file') return; // 正在看导入的文件时不被覆盖
       setData(e.data.payload, 'script');
@@ -751,7 +755,11 @@
     });
     // 使用帮助：同一份内容放进空白页和帮助弹窗
     const tpl = $('#tpl-help');
+    // 第一步按设备区分：电脑装暴力猴扩展，手机装 Edge 再装扩展
+    const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    tpl.content.querySelectorAll(`[data-os]:not([data-os="${mobile ? 'mobile' : 'pc'}"])`).forEach((el) => el.remove());
     document.querySelectorAll('[data-help]').forEach((el) => el.replaceChildren(tpl.content.cloneNode(true)));
+    addStayLinks();
     const help = $('#dlg-help');
     $('#btn-help').onclick = () => help.showModal();
     help.querySelectorAll('[data-close]').forEach((b) => { b.onclick = () => help.close(); });
@@ -827,6 +835,20 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
   }
 
+  // iOS：Safari 打开 .user.js 时 Stay 会弹两次安装，另给一个直接唤起 Stay 安装页的链接（只弹一次）
+  function addStayLinks() {
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!ios) return;
+    const url = new URL('hsbc_bill_export.user.js', location.href).href;
+    document.querySelectorAll('a[href$=".user.js"]').forEach((a) => {
+      const s = document.createElement('a');
+      s.href = `stay://x-callback-url/install?scriptURL=${encodeURIComponent(url)}`;
+      s.className = a.className;
+      s.textContent = '在 Stay 中安装';
+      a.after(' · ', s);
+    });
+  }
+
   // ---------------- 启动 ----------------
   function boot() {
     const th = LS.get('br:theme', null);
@@ -836,10 +858,19 @@
     const cached = SS.get('br:data');
     if (cached?.txs?.length && cached.source === 'file') { data = cached; }
     render();
-    // 向油猴脚本要数据（脚本可能晚于页面就绪，多试几次）
+    // 向油猴脚本要数据。脚本可能晚于页面就绪（iOS 上的 Stay 要先和扩展后台通信，常常要好几秒），
+    // 所以持续请求一段时间；新版脚本就绪时也会主动推送一次，之后随时到达都会显示
     requestFromScript();
-    [300, 1000, 2500].forEach((ms) => setTimeout(() => { if (!bridge) requestFromScript(); else if (!data) render(); }, ms));
-    setTimeout(() => { if (!data) render(); }, 2600);
+    const t0 = Date.now();
+    const timer = setInterval(() => {
+      if (bridge) { clearInterval(timer); return; }
+      if (Date.now() - t0 > 30000) { clearInterval(timer); return; }
+      requestFromScript();
+      if (detecting && Date.now() - t0 > 6000) { detecting = false; if (!data) render(); }
+    }, 500);
+    // 从后台切回、或 Safari 从往返缓存恢复页面时，重新要一次最新数据
+    window.addEventListener('pageshow', (e) => { if (e.persisted) requestFromScript(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') requestFromScript(); });
   }
   boot();
 })();

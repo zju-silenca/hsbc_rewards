@@ -260,7 +260,7 @@ section > .card { margin-bottom: 16px; }
 /* 分类色 class（CSP 禁止内联 style，SVG/色块都用 class） */
 .f1 { fill: var(--s1); } .f2 { fill: var(--s2); } .f3 { fill: var(--s3); } .f4 { fill: var(--s4); } .f5 { fill: var(--s5); } .f0 { fill: var(--muted); }
 .b1 { background: var(--s1); } .b2 { background: var(--s2); } .b3 { background: var(--s3); } .b4 { background: var(--s4); } .b5 { background: var(--s5); } .b0 { background: var(--muted); }
-.bridge-note { margin: 12px 0 0; padding: 8px 10px; border-radius: 8px; }
+.bridge-note { margin: 12px 0 0; padding: 8px 10px; border-radius: 8px; color: var(--muted); }
 .bridge-note.ok { background: var(--good-bg); color: var(--good-ink); }
 .bridge-note.warn { background: var(--bad-bg); color: var(--bad-ink); }
 
@@ -311,6 +311,8 @@ dialog.dlg::backdrop { background: rgba(0,0,0,.35); }
 dialog.dlg-help { width: min(600px, calc(100vw - 32px)); }
 .help ol { padding-left: 20px; color: var(--text-2); }
 .help li { margin: 6px 0; }
+.help .ext-links { margin: 4px 0; padding-left: 18px; list-style: disc; }
+.help .ext-links li { margin: 2px 0; }
 .help a { overflow-wrap: anywhere; }
 .dlg-help .help { margin: 12px 0; }
 .chip.GOOGLEPAY, .chip.SAMSUNGPAY { background: var(--ap-bg); color: var(--ap-ink); }
