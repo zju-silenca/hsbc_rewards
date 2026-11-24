@@ -35,6 +35,10 @@
 - 本项目与汇丰银行无关。返利按公开条款估算，实际以银行入账为准。
 - 欢迎提 issue 反馈问题或补充优惠规则。参与开发请先阅读 [AGENT.md](AGENT.md)。
 
+## 友情链接
+
+- [LINUX DO](https://linux.do/)
+
 ## License
 
 [MIT](LICENSE)
